@@ -1,4 +1,4 @@
-package db
+package obj
 
 import (
 	"errors"
@@ -14,11 +14,10 @@ var (
 
 func NewDocument(src string, r *http.Response) (d *Document, err error) {
 	d = &Document{
-		Item:        NewItem("Document"),
+		Item:        NewItem(TDocument),
 		Source:      r.Request.URL.EscapedPath(),
-		ContentType: strings.ReplaceAll(strings.ReplaceAll(r.Header.Get("content-type"), "application/", ""), "text/", ""),
+		ContentType: r.Header.Get("content-type"),
 	}
-
 	return
 }
 
@@ -34,9 +33,7 @@ type Document struct {
 }
 
 func (d *Document) Create() error {
-
 	fileBytes, err := resourceToBytes(d.Source)
-
 	if err != nil {
 		return err
 	}
@@ -48,18 +45,21 @@ func (d *Document) Create() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (d *Document) Destroy() error {
-
-	return nil
+	return os.Remove(d.Path)
 }
 
 func (d *Document) Provide(w http.ResponseWriter) error {
-
-	return nil
+	b, err := os.ReadFile(d.Path)
+	if err != nil {
+		return err
+	}
+	w.Header().Set("content-type", d.ContentType)
+	_, err = w.Write(b)
+	return err
 }
 
 func Includes(s string, v []string) bool {
@@ -85,6 +85,7 @@ func (d *Document) FileType() (string, error) {
 
 func resourceToBytes(uri string) ([]byte, error) {
 	req := generateBrowserRequest(uri)
+	req.Header.Set("authority", "www.google.com")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -95,9 +96,9 @@ func resourceToBytes(uri string) ([]byte, error) {
 func generateBrowserRequest(uri string) *http.Request {
 	var req *http.Request
 	req, _ = http.NewRequest("GET", uri, nil)
-
 	req.Header.Set("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
 	req.Header.Set("accept-language", "en-US,en;q=0.9,ru-RU;q=0.8,ru;q=0.7")
 	req.Header.Set("sec-ch-ua", `"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"`)
+	req.Header.Set(`user-agent`, `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36`)
 	return req
 }

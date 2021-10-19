@@ -6,6 +6,7 @@ import (
 
 	badger "github.com/dgraph-io/badger/v3"
 	gocache "github.com/mrod502/go-cache"
+	"github.com/mrod502/stockscraper/obj"
 	msgpack "github.com/vmihailenco/msgpack/v5"
 )
 
@@ -36,17 +37,21 @@ func New(opts Options) (db gocache.DB, err error) {
 }
 
 func (d *DB) Get(k string) (gocache.Object, error) {
-	var obj Item
+	var obj gocache.Object
 	d.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(k))
 		if err != nil {
 			return err
 		}
-		err = item.Value(func(val []byte) error { return msgpack.Unmarshal(val, &obj) })
+		err = item.Value(func(val []byte) error {
+			obj, err = d.getItemObject(val)
+			return err
+		})
 		return err
 	})
-	return nil, nil
+	return obj, nil
 }
+
 func (d *DB) Put(k string, v gocache.Object) error {
 	return d.db.Update(func(txn *badger.Txn) error {
 		b, err := msgpack.Marshal(v)
@@ -59,6 +64,7 @@ func (d *DB) Put(k string, v gocache.Object) error {
 		return txn.Commit()
 	})
 }
+
 func (d *DB) Exists(k string) (bool, error) {
 	if err := d.db.View(func(txn *badger.Txn) error {
 		_, err := txn.Get([]byte(k))
@@ -71,6 +77,7 @@ func (d *DB) Exists(k string) (bool, error) {
 	}
 	return true, nil
 }
+
 func (d *DB) Delete(k string) error {
 
 	return d.db.Update(func(txn *badger.Txn) error {
@@ -100,11 +107,27 @@ func BytesToObj(b []byte) (interface{}, error) {
 	}
 
 	switch c {
-	case TDocument:
-		var v Document
+	case obj.TDocument:
+		var v obj.Document
 		err := msgpack.Unmarshal(b, &v)
 		return v, err
 	default:
 		return nil, ErrUnknownType
 	}
+}
+
+func (d *DB) getItemObject(b []byte) (gocache.Object, error) {
+	t, err := GetItemClass(b)
+	if err != nil {
+		return nil, err
+	}
+	switch t {
+	case obj.TDocument:
+		var obj = &obj.Document{}
+		err := msgpack.Unmarshal(b, obj)
+		return obj, err
+	default:
+		return nil, ErrUnknownType
+	}
+
 }

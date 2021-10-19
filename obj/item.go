@@ -1,4 +1,4 @@
-package db
+package obj
 
 import (
 	"time"
@@ -10,7 +10,7 @@ type Item struct {
 	Id       [16]byte
 	Created  time.Time
 	Class    string
-	Archived bool `msgpack:"md"`
+	Archived bool
 }
 
 func NewItem(class string) *Item {

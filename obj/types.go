@@ -1,4 +1,4 @@
-package db
+package obj
 
 const (
 	TDocument = "doc"
