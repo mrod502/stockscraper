@@ -11,6 +11,7 @@ import (
 	gocache "github.com/mrod502/go-cache"
 	"github.com/mrod502/logger"
 	"github.com/mrod502/stockscraper/db"
+	"github.com/mrod502/stockscraper/scraper"
 )
 
 type scrapeAction struct {
@@ -22,6 +23,7 @@ type Server struct {
 	v            *gocache.ItemCache
 	scrapeQueue  chan scrapeAction
 	l            logger.Client
+	s            *scraper.Client
 	errorHandler func(error)
 }
 
