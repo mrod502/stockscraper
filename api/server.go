@@ -1,11 +1,8 @@
 package api
 
 import (
-	"bytes"
-	"crypto/rand"
 	"fmt"
-	"math/big"
-	"time"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	gocache "github.com/mrod502/go-cache"
@@ -14,58 +11,62 @@ import (
 	"github.com/mrod502/stockscraper/scraper"
 )
 
-type scrapeAction struct {
-}
-
 type Server struct {
 	router       *mux.Router
-	db           gocache.DB
-	v            *gocache.ItemCache
-	scrapeQueue  chan scrapeAction
+	db           *db.DB
+	v            *gocache.ObjectCache
 	l            logger.Client
-	s            *scraper.Client
+	s            scraper.Client
+	c            Config
 	errorHandler func(error)
 }
 
-func NewServer(errHandler func(error)) (s *Server, err error) {
-	var dbOpts db.Options
-	if errHandler == nil {
-		errHandler = defaultErrorHandler
-	}
-	db, err := db.New(dbOpts)
+func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
+
+	db, err := db.New(cfg.Db)
 	if err != nil {
 		return nil, err
 	}
 	s = &Server{
-		router:       mux.NewRouter(),
-		v:            gocache.NewItemCache().WithDb(db),
-		db:           db,
-		errorHandler: errHandler,
-		scrapeQueue:  make(chan scrapeAction, 1<<12),
+		router: mux.NewRouter(),
+		v:      gocache.NewObjectCache().WithDb(db),
+		db:     db,
 	}
+	if errHandler == nil {
+		s.errorHandler = s.defaultErrorHandler
+	}
+	s.buildRoutes()
 	return
 }
 
-func randomWait() {
-	n, _ := rand.Int(bytes.NewReader([]byte{}), big.NewInt(100))
-	time.Sleep(time.Duration(n.Int64()) * time.Second)
+func (s *Server) defaultErrorHandler(err error) {
+	s.l.Write("API", "scraper", err.Error())
 }
 
-func (s *Server) processQueue() {
+func (s *Server) Serve() error {
+	return http.ListenAndServe(fmt.Sprintf(":%d", s.c.ServePort), s.router)
+}
 
-	for {
-		if err := s.handleScrapeAction(<-s.scrapeQueue); err != nil {
-			s.errorHandler(err)
-		}
-		randomWait()
+func (s *Server) buildRoutes() {
+	s.router.HandleFunc("/scrape/{symbol}/{filetype}", s.Scrape)
+	s.router.HandleFunc("/query", s.Query)
+}
+
+func (s *Server) Query(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (s *Server) Scrape(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+
+	symbol := vars["symbol"]
+	ftype := vars["filetype"]
+	if !(ftype == "pdf" || ftype == "txt" || ftype == "html" || ftype == "xml") {
+		http.Error(w, "invalid filetype", http.StatusBadRequest)
+		s.err(requestSummary(r)...)
+		return
 	}
-}
-
-func defaultErrorHandler(err error) {
-	fmt.Println(err)
-}
-
-func (s *Server) handleScrapeAction(a scrapeAction) error {
-
-	return nil
+	go s.s.Scrape(symbol, ftype)
+	w.WriteHeader(http.StatusOK)
 }

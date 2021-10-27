@@ -13,19 +13,20 @@ import (
 var (
 	ErrClassNotFound = errors.New("unable to determine class of db object")
 	ErrUnknownType   = errors.New("unable to determine type of the object")
+	b                = badger.DefaultOptions("bruh")
 )
 
-type Options struct {
-	BadgerOpts badger.Options
+type Config struct {
+	BadgerOpts badger.Options `yaml:"badger_opts"`
 }
 
 type DB struct {
 	db *badger.DB
 }
 
-func New(opts Options) (db gocache.DB, err error) {
+func New(cfg Config) (db *DB, err error) {
 
-	d, err := badger.Open(opts.BadgerOpts)
+	d, err := badger.Open(cfg.BadgerOpts)
 
 	if err != nil {
 		return nil, err
