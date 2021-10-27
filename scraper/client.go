@@ -28,7 +28,7 @@ func buildBingUri(q string) (u string) {
 }
 
 type Client interface {
-	Scrape(symbol, filetype string) (chan *obj.Document, error)
+	Scrape(symbol, filetype string) ([]*obj.Document, error)
 }
 
 func setGoogleHeaders(req *http.Request) {

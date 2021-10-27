@@ -28,14 +28,14 @@ func Setup(cfg Config) {
 }
 
 type documentManager struct {
-	baseDir    string
-	l          *sync.RWMutex
-	toTextChan chan *Document
+	baseDir  string
+	l        *sync.RWMutex
+	saveChan chan *Document
 }
 
-func (d *documentManager) textProcessor() {
+func (d *documentManager) saveProcessor() {
 	for {
-		d.saveText(<-d.toTextChan)
+		d.save(<-d.saveChan)
 	}
 }
 
@@ -49,20 +49,17 @@ func (d documentManager) pdfPath() string {
 }
 
 func NewDocumentManager(baseDir string) (d *documentManager, err error) {
-	d = &documentManager{baseDir: baseDir, l: &sync.RWMutex{}, toTextChan: make(chan *Document, 512)}
-	if err = os.Mkdir(baseDir, 0600); !os.IsExist(err) && err != nil {
+	d = &documentManager{baseDir: baseDir, l: &sync.RWMutex{}, saveChan: make(chan *Document, 512)}
+	if err = os.Mkdir(baseDir, os.ModePerm); err != nil && !os.IsExist(err) {
 		return
 	}
-
-	if err = os.Mkdir(d.txtPath(), 0600); err != nil && !os.IsExist(err) {
+	if err = os.Mkdir(d.txtPath(), os.ModePerm); err != nil && !os.IsExist(err) {
 		return
 	}
-
 	if err = os.Mkdir(d.pdfPath(), 0600); err != nil && !os.IsExist(err) {
 		return
 	}
-	go d.textProcessor()
-
+	go d.saveProcessor()
 	return
 }
 
@@ -72,7 +69,6 @@ func (d *documentManager) save(doc *Document) error {
 		return err
 	}
 	f, err := os.Create(path.Join())
-
 	if err != nil {
 		return err
 	}

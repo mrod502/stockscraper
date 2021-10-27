@@ -8,42 +8,59 @@ import (
 	gocache "github.com/mrod502/go-cache"
 	"github.com/mrod502/logger"
 	"github.com/mrod502/stockscraper/db"
+	"github.com/mrod502/stockscraper/obj"
 	"github.com/mrod502/stockscraper/scraper"
 )
 
 type Server struct {
-	router       *mux.Router
-	db           *db.DB
-	v            *gocache.ObjectCache
-	l            logger.Client
-	s            scraper.Client
-	c            Config
-	errorHandler func(error)
+	router      *mux.Router
+	db          *db.DB
+	v           *gocache.ObjectCache
+	l           logger.Client
+	s           scraper.Client
+	c           Config
+	newDocsChan chan *obj.Document
 }
 
 func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
-
 	db, err := db.New(cfg.Db)
 	if err != nil {
 		return nil, err
 	}
-	s = &Server{
-		router: mux.NewRouter(),
-		v:      gocache.NewObjectCache().WithDb(db),
-		db:     db,
+	l, err := logger.NewClient(cfg.Logger)
+	if err != nil {
+		return nil, err
 	}
-	if errHandler == nil {
-		s.errorHandler = s.defaultErrorHandler
+	s = &Server{
+		router:      mux.NewRouter(),
+		v:           gocache.NewObjectCache().WithDb(db),
+		db:          db,
+		newDocsChan: make(chan *obj.Document, 512),
+		l:           l,
+		s:           scraper.NewGoogleClient(),
+	}
+	err = s.l.Connect()
+	if err != nil {
+		return nil, err
 	}
 	s.buildRoutes()
 	return
 }
 
-func (s *Server) defaultErrorHandler(err error) {
-	s.l.Write("API", "scraper", err.Error())
+func (s *Server) documentProcessor() {
+	for {
+		d := <-s.newDocsChan
+		err := d.Create()
+		if err != nil {
+			s.err("create", d.Source, err.Error())
+			continue
+		}
+		s.db.Put(string(d.Id[:]), d)
+	}
 }
 
 func (s *Server) Serve() error {
+	go s.documentProcessor()
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.c.ServePort), s.router)
 }
 
@@ -67,6 +84,14 @@ func (s *Server) Scrape(w http.ResponseWriter, r *http.Request) {
 		s.err(requestSummary(r)...)
 		return
 	}
-	go s.s.Scrape(symbol, ftype)
+	go func() {
+		d, err := s.s.Scrape(symbol, ftype)
+		if err != nil {
+			s.err("scrape", err.Error())
+		}
+		for _, v := range d {
+			s.newDocsChan <- v
+		}
+	}()
 	w.WriteHeader(http.StatusOK)
 }

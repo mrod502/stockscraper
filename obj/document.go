@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -13,7 +12,6 @@ var (
 	ErrNoExtension   = errors.New("no file extension")
 	ErrFilenameParse = errors.New("unable to parse uri into filename")
 	ErrFileType      = errors.New("incorrect filetype")
-	rexUrlFile       = regexp.MustCompile(`/([^/]+)$`)
 )
 
 func NewDocument(dbRoot, src string, r *http.Response) (d *Document, err error) {
@@ -39,16 +37,9 @@ type Document struct {
 	PostedDate  time.Time `msgpack:"pdate,omitempty"`
 }
 
-func getFilenameFromUri(url string) (string, error) {
-	match := rexUrlFile.FindStringSubmatch(url)
-	if len(match) < 2 {
-		return "", ErrFilenameParse
-	}
-	return match[1], nil
-}
-
 func (d *Document) Create() error {
-	return docMgr.save(d)
+	docMgr.saveChan <- d
+	return nil
 }
 
 func (d *Document) Destroy() error {

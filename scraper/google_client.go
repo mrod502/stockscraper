@@ -8,6 +8,10 @@ import (
 	"github.com/mrod502/stockscraper/obj"
 )
 
+func NewGoogleClient() *GoogleClient {
+	return &GoogleClient{p: &GParser{}}
+}
+
 type GoogleClient struct {
 	p *GParser
 }
