@@ -13,7 +13,6 @@ import (
 var (
 	ErrClassNotFound = errors.New("unable to determine class of db object")
 	ErrUnknownType   = errors.New("unable to determine type of the object")
-	b                = badger.DefaultOptions("bruh")
 )
 
 type Config struct {
@@ -36,6 +35,7 @@ func New(cfg Config) (db *DB, err error) {
 	}
 	return
 }
+func (d *DB) Close() error { return d.db.Close() }
 
 func (d *DB) Get(k string) (gocache.Object, error) {
 	var obj gocache.Object
@@ -85,14 +85,23 @@ func (d *DB) Delete(k string) error {
 		return txn.Delete([]byte(k))
 	})
 }
-func (d *DB) Where(m gocache.Matcher) ([]gocache.Object, error) {
-	return nil, nil
-}
-func (d *DB) Keys() []string {
-	return nil
+
+func (d *DB) Keys() (keys []string) {
+	keys = make([]string, 0)
+	d.db.View(func(t *badger.Txn) error {
+		iterator := t.NewIterator(badger.IteratorOptions{
+			PrefetchValues: false,
+		})
+		defer iterator.Close()
+		for key := iterator.Item().Key(); iterator.Valid(); iterator.Next() {
+			keys = append(keys, string(key))
+		}
+		return nil
+	})
+	return
 }
 
-func GetItemClass(b []byte) (string, error) {
+func GetClass(b []byte) (string, error) {
 	ix0 := bytes.Index(b, []byte("Class")) + 6
 	if ix0 < 0 {
 		return "", ErrClassNotFound
@@ -102,7 +111,7 @@ func GetItemClass(b []byte) (string, error) {
 }
 
 func BytesToObj(b []byte) (interface{}, error) {
-	c, err := GetItemClass(b)
+	c, err := GetClass(b)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +127,7 @@ func BytesToObj(b []byte) (interface{}, error) {
 }
 
 func (d *DB) getItemObject(b []byte) (gocache.Object, error) {
-	t, err := GetItemClass(b)
+	t, err := GetClass(b)
 	if err != nil {
 		return nil, err
 	}

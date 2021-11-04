@@ -26,7 +26,7 @@ func TestItem(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println("bytes:", b)
-	c, _ := GetItemClass(b)
+	c, _ := GetClass(b)
 	fmt.Println(c)
 
 	fmt.Println("str:", string(b))

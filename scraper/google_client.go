@@ -19,7 +19,10 @@ type GoogleClient struct {
 func (g *GoogleClient) Scrape(symbol, ftype string) (d []*obj.Document, err error) {
 
 	uri := buildGoogleUri(fmt.Sprintf("%s equity research filetype:%s", symbol, ftype))
-	r, _ := http.NewRequest("GET", uri, nil)
+	r, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, err
+	}
 	setGoogleHeaders(r)
 
 	res, err := http.DefaultClient.Do(r)
@@ -31,5 +34,11 @@ func (g *GoogleClient) Scrape(symbol, ftype string) (d []*obj.Document, err erro
 		return nil, err
 	}
 
-	return g.p.Parse(b)
+	d, err = g.p.Parse(b)
+	for _, doc := range d {
+		if doc != nil {
+			doc.Symbols = []string{symbol}
+		}
+	}
+	return
 }

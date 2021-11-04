@@ -9,7 +9,7 @@ import (
 )
 
 func TestDocument(t *testing.T) {
-	uri := "https://www8.gsb.columbia.edu/valueinvesting/sites/valueinvesting/files/ASML%20NV%20Stock%20Pitch%20-%20sm4843%20-%20VI%20with%20Legends%20-%20final.pdf"
+	uri := `https://www8.gsb.columbia.edu/valueinvesting/sites/valueinvesting/files/ASML%20NV%20Stock%20Pitch%20-%20sm4843%20-%20VI%20with%20Legends%20-%20final.pdf`
 	res, err := http.Get(uri)
 	if err != nil {
 		t.Fatal(err)

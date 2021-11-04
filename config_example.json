@@ -1,7 +1,7 @@
 {
-    "Obj": {
-        "DBPath": "",
-        "FileStorePath": ""
+	"Obj": {
+			"DBPath": "",
+			"FileStorePath": ""
     },
     "Scraper": {},
     "Db": {

@@ -37,6 +37,14 @@ func (p *GParser) Parse(b []byte) (d []*obj.Document, err error) {
 	for {
 		tt := z.Next()
 		if tt == html.ErrorToken {
+			for i, v := range d {
+				if v.Source == "" {
+					if i == (len(d) - 1) {
+						d = d[:i]
+					}
+					d = append(d[:i], d[i+1:]...)
+				}
+			}
 			return
 		}
 		switch tt {

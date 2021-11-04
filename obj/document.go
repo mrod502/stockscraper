@@ -2,8 +2,10 @@ package obj
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -12,6 +14,9 @@ var (
 	ErrNoExtension   = errors.New("no file extension")
 	ErrFilenameParse = errors.New("unable to parse uri into filename")
 	ErrFileType      = errors.New("incorrect filetype")
+)
+var (
+	rexSrc = regexp.MustCompile(`src='([^']+)'`)
 )
 
 func NewDocument(dbRoot, src string, r *http.Response) (d *Document, err error) {
@@ -65,22 +70,59 @@ func Includes(s string, v []string) bool {
 	return false
 }
 
-func (d *Document) retrieve() ([]byte, error) {
+func (d *Document) doRequest() (res *http.Response, err error) {
 	req := generateBrowserRequest(d.Source)
-	res, err := http.DefaultClient.Do(req)
+	if req == nil {
+		return nil, errors.New("nil request")
+	}
+	res, err = http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	d.ContentType = res.Header.Get("content-type")
-	return io.ReadAll(res.Body)
+	return
+}
+
+func (d *Document) retrieve() ([]byte, error) {
+	res, err := d.doRequest()
+	if err != nil {
+		return nil, err
+	}
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	if d.ContentType == "text/html" {
+		if m := rexSrc.FindStringSubmatch(string(b)); len(m) == 2 {
+			if strings.Contains(m[1], "pdf") {
+				d.Source = m[1]
+				res, err := d.doRequest()
+				if err != nil {
+					return nil, err
+				}
+				return io.ReadAll(res.Body)
+			}
+		}
+
+	}
+	return b, err
 }
 
 func generateBrowserRequest(uri string) *http.Request {
 	var req *http.Request
-	req, _ = http.NewRequest("GET", uri, nil)
+	var err error
+	req, err = http.NewRequest("GET", uri, nil)
+	if err != nil {
+		fmt.Println("generateBrowserRequest", uri, err)
+		return req
+	}
 	req.Header.Set("accept", "application/pdf,text/html,text/plain,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
 	req.Header.Set("accept-language", "en-US,en;q=0.9,ru-RU;q=0.8,ru;q=0.7")
 	req.Header.Set("sec-ch-ua", `"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"`)
 	req.Header.Set(`user-agent`, `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36`)
 	return req
+}
+
+func (d Document) isText() bool {
+	return strings.Contains(d.ContentType, "text/")
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type Item struct {
-	Id       [16]byte
+	Id       string
 	Created  time.Time
 	Class    string
 	Archived bool
@@ -15,8 +15,11 @@ type Item struct {
 
 func NewItem(class string) *Item {
 	return &Item{
-		Id:      uuid.New(),
+		Id:      uuid.New().String(),
 		Created: time.Now(),
 		Class:   class,
 	}
 }
+
+func (i Item) Create() error  { return nil }
+func (i Item) Destroy() error { return nil }
