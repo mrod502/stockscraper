@@ -85,6 +85,9 @@ func (d *documentManager) save(doc *Document) error {
 	if err != nil {
 		return err
 	}
+	if strings.Contains(doc.ContentType, "text/") {
+		return nil
+	}
 
 	return d.saveText(doc)
 }

@@ -7,9 +7,10 @@ require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/mrod502/go-cache v1.1.4
+	github.com/mrod502/go-cache v1.1.13
 	github.com/mrod502/logger v1.1.18
 	github.com/vmihailenco/msgpack/v5 v5.3.5
+	go.uber.org/atomic v1.9.0
 	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3
 )
 
@@ -52,7 +53,6 @@ require (
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect

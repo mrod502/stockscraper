@@ -3,12 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"net/http"
 	"os"
 	"os/signal"
-	"strings"
-	"time"
 
 	"github.com/mrod502/stockscraper/api"
 	"github.com/mrod502/stockscraper/obj"
@@ -39,21 +35,7 @@ func main() {
 		}
 	}()
 
-	go func() {
-		b, err := os.ReadFile("symbols.txt")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		s := string(b)
-		for _, sym := range strings.Split(s, "\n") {
-			http.DefaultClient.Get(fmt.Sprintf("http://localhost:8849/scrape/%s/pdf", sym))
-			time.Sleep(time.Second * time.Duration(rand.Intn(40)))
-		}
-
-	}()
 	c := make(chan os.Signal, 1)
-
 	signal.Notify(c, os.Interrupt)
 	<-c
 	fmt.Println("bye")

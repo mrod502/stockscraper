@@ -7,15 +7,19 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
+var (
+	DefaultResultLimit uint = 100
+)
+
 func (d *DB) Where(m gocache.Matcher) ([]gocache.Object, error) {
 	var objects []gocache.Object = make([]gocache.Object, 0)
+	var matches uint
 	for _, key := range d.Keys() {
 		err := d.db.View(func(t *badger.Txn) error {
 			item, rerr := t.Get([]byte(key))
 			if rerr != nil {
 				return rerr
 			}
-
 			return item.Value(func(b []byte) error {
 				class, err := GetClass(b)
 				if err != nil {
@@ -28,37 +32,42 @@ func (d *DB) Where(m gocache.Matcher) ([]gocache.Object, error) {
 					if err != nil {
 						return err
 					}
-					if m(object) {
+					if m.Match(object) {
+						matches++
 						objects = append(objects, object)
 					}
 				default:
 					return ErrClassNotFound
-
 				}
 				return err
 			})
-
 		})
 		if err != nil {
-			return nil, err
+			return objects, err
 		}
-
+		if matches >= m.GetLimit() {
+			return objects, nil
+		}
 	}
-	return nil, nil
+	return objects, nil
 }
 
 type ItemQuery struct {
 	Created  gocache.TimeQuery
 	Class    gocache.StringQuery
 	Archived gocache.BoolQuery
+	Limit    uint
 }
 
-func NewItemQuery(c gocache.TimeQuery, cl gocache.StringQuery, d gocache.BoolQuery) ItemQuery {
+func (q ItemQuery) GetLimit() uint { return q.Limit | 1 }
+
+func NewItemQuery(c gocache.TimeQuery, cl gocache.StringQuery, d gocache.BoolQuery, l uint) ItemQuery {
 
 	return ItemQuery{
 		Created:  c,
 		Class:    cl,
 		Archived: d,
+		Limit:    l,
 	}
 }
 func NewDocQuery(i ItemQuery,
@@ -101,10 +110,13 @@ type DocQuery struct {
 
 func (d DocQuery) Match(v gocache.Object) bool {
 	doc := v.(*obj.Document)
-
-	return d.ItemQuery.Match(doc.Item) && d.Title.Match(doc.Title) &&
+	return d.ItemQuery.Match(*doc.Item) && d.Title.Match(doc.Title) &&
 		d.Symbols.Match(doc.Symbols) && d.Sectors.Match(doc.Sectors) &&
 		d.Source.Match(doc.Source) && d.ContentType.Match(doc.ContentType) &&
 		d.Type.Match(doc.ContentType) && d.PostedDate.Match(doc.PostedDate)
 
+}
+
+func (d DocQuery) GetLimit() uint {
+	return ifZero(d.Limit, DefaultResultLimit)
 }

@@ -89,11 +89,10 @@ func (d *DB) Delete(k string) error {
 func (d *DB) Keys() (keys []string) {
 	keys = make([]string, 0)
 	d.db.View(func(t *badger.Txn) error {
-		iterator := t.NewIterator(badger.IteratorOptions{
-			PrefetchValues: false,
-		})
+		iterator := t.NewIterator(badger.DefaultIteratorOptions)
 		defer iterator.Close()
-		for key := iterator.Item().Key(); iterator.Valid(); iterator.Next() {
+		for iterator.Seek([]byte("")); iterator.Valid(); iterator.Next() {
+			key := iterator.Item().Key()
 			keys = append(keys, string(key))
 		}
 		return nil
@@ -106,7 +105,7 @@ func GetClass(b []byte) (string, error) {
 	if ix0 < 0 {
 		return "", ErrClassNotFound
 	}
-	ix1 := bytes.Index(b[ix0:], []byte{163}) + ix0
+	ix1 := bytes.Index(b[ix0:], []byte{168}) + ix0
 	return string(b[ix0:ix1]), nil
 }
 
@@ -115,7 +114,6 @@ func BytesToObj(b []byte) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	switch c {
 	case obj.TDocument:
 		var v obj.Document

@@ -19,13 +19,10 @@ var (
 	rexSrc = regexp.MustCompile(`src='([^']+)'`)
 )
 
-func NewDocument(dbRoot, src string, r *http.Response) (d *Document, err error) {
-	if err != nil {
-		return nil, err
-	}
+func NewDocument(r *http.Response) (d *Document) {
 	d = &Document{
 		Item:        NewItem(TDocument),
-		Source:      r.Request.URL.EscapedPath(),
+		Source:      "https://" + r.Request.Host + r.Request.URL.RequestURI(),
 		ContentType: r.Header.Get("content-type"),
 	}
 	return
@@ -86,8 +83,10 @@ func (d *Document) doRequest() (res *http.Response, err error) {
 func (d *Document) retrieve() ([]byte, error) {
 	res, err := d.doRequest()
 	if err != nil {
+		fmt.Println(err.Error())
 		return nil, err
 	}
+	fmt.Println("doc: got - ", res.Request.URL.EscapedPath())
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
