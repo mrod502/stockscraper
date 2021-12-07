@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/obj/item"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
 type TestObj struct {
-	*obj.Item
+	*item.Item
 	Val       string
 	Something struct {
 		Val int
@@ -18,7 +18,7 @@ type TestObj struct {
 
 func TestItem(t *testing.T) {
 	var v = &TestObj{
-		Item:      obj.NewItem("TestObj"),
+		Item:      item.New("TestObj"),
 		Something: struct{ Val int }{Val: 1},
 	}
 	b, err := msgpack.Marshal(v)

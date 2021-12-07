@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/obj/document"
 )
 
 const (
@@ -28,7 +28,7 @@ func buildBingUri(q string) (u string) {
 }
 
 type Client interface {
-	Scrape(symbol, filetype string) ([]*obj.Document, error)
+	Scrape(symbol, filetype string) ([]*document.Document, error)
 }
 
 func setGoogleHeaders(req *http.Request) {

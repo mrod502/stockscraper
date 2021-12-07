@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/obj/document"
 )
 
 func NewGoogleClient() *GoogleClient {
@@ -16,7 +16,7 @@ type GoogleClient struct {
 	p *GParser
 }
 
-func (g *GoogleClient) Scrape(symbol, ftype string) (d []*obj.Document, err error) {
+func (g *GoogleClient) Scrape(symbol, ftype string) (d []*document.Document, err error) {
 
 	uri := buildGoogleUri(fmt.Sprintf("%s equity research filetype:%s", symbol, ftype))
 	r, err := http.NewRequest("GET", uri, nil)

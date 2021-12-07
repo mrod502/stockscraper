@@ -12,7 +12,7 @@ import (
 	gocache "github.com/mrod502/go-cache"
 	"github.com/mrod502/logger"
 	"github.com/mrod502/stockscraper/db"
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/obj/document"
 	"github.com/mrod502/stockscraper/scraper"
 	"go.uber.org/atomic"
 )
@@ -24,7 +24,7 @@ type Server struct {
 	l           logger.Client
 	s           scraper.Client
 	c           Config
-	newDocsChan chan *obj.Document
+	newDocsChan chan *document.Document
 	crawlReset  *atomic.Int64
 }
 
@@ -41,7 +41,7 @@ func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
 		router:      mux.NewRouter(),
 		v:           gocache.NewObjectCache().WithDb(db),
 		db:          db,
-		newDocsChan: make(chan *obj.Document, 512),
+		newDocsChan: make(chan *document.Document, 512),
 		l:           l,
 		c:           cfg,
 		s:           scraper.NewGoogleClient(),
@@ -178,14 +178,14 @@ func (s *Server) crawl(w http.ResponseWriter, r *http.Request) {
 
 	c.SetApplicationFileHandler(func(r *http.Response) error {
 		if r.Header.Get("content-type") == "application/pdf" {
-			doc := obj.NewDocument(r)
+			doc := document.New(r)
 			s.newDocsChan <- doc
 		}
 		return nil
 	})
 
 	c.SetTextFileHandler(func(r *http.Response) error {
-		doc := obj.NewDocument(r)
+		doc := document.New(r)
 		s.newDocsChan <- doc
 		return nil
 	})

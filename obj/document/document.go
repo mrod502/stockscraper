@@ -1,13 +1,17 @@
-package obj
+package document
 
 import (
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/mrod502/stockscraper/obj/item"
+	"github.com/mrod502/stockscraper/obj/types"
 )
 
 var (
@@ -19,9 +23,9 @@ var (
 	rexSrc = regexp.MustCompile(`src='([^']+)'`)
 )
 
-func NewDocument(r *http.Response) (d *Document) {
+func New(r *http.Response) (d *Document) {
 	d = &Document{
-		Item:        NewItem(TDocument),
+		Item:        item.New(types.Document),
 		Source:      "https://" + r.Request.Host + r.Request.URL.RequestURI(),
 		ContentType: r.Header.Get("content-type"),
 	}
@@ -29,7 +33,7 @@ func NewDocument(r *http.Response) (d *Document) {
 }
 
 type Document struct {
-	*Item
+	*item.Item
 	Title       string    `msgpack:"tit,omitempty"`
 	Symbols     []string  `msgpack:"sym,omitempty"` // Stock or crypto symbols mentioned in the article
 	Sectors     []string  `msgpack:"sct,omitempty"` // Sectors of industry / finance this document mentions / relates to
@@ -56,6 +60,10 @@ func (d *Document) Provide(w http.ResponseWriter) error {
 	w.Header().Set("content-type", d.ContentType)
 	_, err = w.Write(b)
 	return err
+}
+
+func (d *Document) Load() (*os.File, error) {
+	return docMgr.loadFile(d)
 }
 
 func Includes(s string, v []string) bool {

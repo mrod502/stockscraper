@@ -1,4 +1,4 @@
-package obj
+package item
 
 import (
 	"time"
@@ -13,7 +13,7 @@ type Item struct {
 	Archived bool
 }
 
-func NewItem(class string) *Item {
+func New(class string) *Item {
 	return &Item{
 		Id:      uuid.New().String(),
 		Created: time.Now(),

@@ -1,4 +1,4 @@
-package obj
+package document
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	docMgr         *documentManager
+	docMgr         *manager
 	ErrUnsupported = errors.New("unsupported filetype")
 )
 
@@ -23,20 +23,20 @@ type Config struct {
 
 func Setup(cfg Config) {
 	var err error
-	docMgr, err = NewDocumentManager(cfg.FileStorePath)
+	docMgr, err = Newmanager(cfg.FileStorePath)
 	if err != nil {
 		panic(err)
 	}
 
 }
 
-type documentManager struct {
+type manager struct {
 	baseDir  string
 	l        *sync.RWMutex
 	saveChan chan *Document
 }
 
-func (d *documentManager) saveProcessor() {
+func (d *manager) saveProcessor() {
 	for {
 		err := d.save(<-d.saveChan)
 		if err != nil {
@@ -45,17 +45,17 @@ func (d *documentManager) saveProcessor() {
 	}
 }
 
-func (d documentManager) txtPath() string {
+func (d manager) txtPath() string {
 	return path.Join(d.baseDir, "text")
 }
-func (d documentManager) otherPath() string { return path.Join(d.baseDir, "other") }
+func (d manager) otherPath() string { return path.Join(d.baseDir, "other") }
 
-func (d documentManager) pdfPath() string {
+func (d manager) pdfPath() string {
 	return path.Join(d.baseDir, "pdf")
 }
 
-func NewDocumentManager(baseDir string) (d *documentManager, err error) {
-	d = &documentManager{baseDir: baseDir, l: &sync.RWMutex{}, saveChan: make(chan *Document, 512)}
+func Newmanager(baseDir string) (d *manager, err error) {
+	d = &manager{baseDir: baseDir, l: &sync.RWMutex{}, saveChan: make(chan *Document, 512)}
 	if err = os.Mkdir(baseDir, 0777); err != nil && !os.IsExist(err) {
 		return
 	}
@@ -70,7 +70,7 @@ func NewDocumentManager(baseDir string) (d *documentManager, err error) {
 	return
 }
 
-func (d *documentManager) save(doc *Document) error {
+func (d *manager) save(doc *Document) error {
 	b, err := doc.retrieve()
 	if err != nil {
 		return err
@@ -92,12 +92,12 @@ func (d *documentManager) save(doc *Document) error {
 	return d.saveText(doc)
 }
 
-func (d *documentManager) remove(doc *Document) error {
+func (d *manager) remove(doc *Document) error {
 
 	return nil
 }
 
-func (d *documentManager) load(doc *Document) ([]byte, error) {
+func (d *manager) load(doc *Document) ([]byte, error) {
 	if b, err := os.ReadFile(d.genPath(doc)); err == nil {
 		return b, err
 	}
@@ -108,15 +108,15 @@ func (d *documentManager) load(doc *Document) ([]byte, error) {
 	return os.ReadFile(d.genPath(doc))
 }
 
-func (d *documentManager) loadFile(doc *Document) (*os.File, error) {
+func (d *manager) loadFile(doc *Document) (*os.File, error) {
 	return os.Open(d.genPath(doc))
 }
 
-func (d *documentManager) loadText(doc *Document) ([]byte, error) {
+func (d *manager) loadText(doc *Document) ([]byte, error) {
 	return os.ReadFile(path.Join(d.txtPath(), doc.Id, ".txt"))
 }
 
-func (d *documentManager) genPath(doc *Document) string {
+func (d *manager) genPath(doc *Document) string {
 	switch doc.ContentType {
 	case "text/plain":
 		return path.Join(d.txtPath(), doc.Id+".txt")
@@ -131,7 +131,7 @@ func (d *documentManager) genPath(doc *Document) string {
 	}
 }
 
-func (d *documentManager) saveText(doc *Document) error {
+func (d *manager) saveText(doc *Document) error {
 	if strings.Contains(doc.ContentType, "text/") {
 		return nil
 	}

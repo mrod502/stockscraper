@@ -6,7 +6,9 @@ import (
 
 	badger "github.com/dgraph-io/badger/v3"
 	gocache "github.com/mrod502/go-cache"
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/db/collection"
+	"github.com/mrod502/stockscraper/obj/document"
+	"github.com/mrod502/stockscraper/obj/types"
 	msgpack "github.com/vmihailenco/msgpack/v5"
 )
 
@@ -20,7 +22,8 @@ type Config struct {
 }
 
 type DB struct {
-	db *badger.DB
+	db    *badger.DB
+	colls map[string]*collection.Collection
 }
 
 func New(cfg Config) (db *DB, err error) {
@@ -115,8 +118,8 @@ func BytesToObj(b []byte) (interface{}, error) {
 		return nil, err
 	}
 	switch c {
-	case obj.TDocument:
-		var v obj.Document
+	case types.Document:
+		var v document.Document
 		err := msgpack.Unmarshal(b, &v)
 		return v, err
 	default:
@@ -130,8 +133,8 @@ func (d *DB) getItemObject(b []byte) (gocache.Object, error) {
 		return nil, err
 	}
 	switch t {
-	case obj.TDocument:
-		var obj = &obj.Document{}
+	case types.Document:
+		var obj = &document.Document{}
 		err := msgpack.Unmarshal(b, obj)
 		return obj, err
 	default:

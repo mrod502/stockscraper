@@ -8,7 +8,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/obj/document"
+	"github.com/mrod502/stockscraper/obj/item"
+	"github.com/mrod502/stockscraper/obj/types"
 	"golang.org/x/net/html"
 )
 
@@ -26,13 +28,13 @@ var (
 type GParser struct {
 }
 
-func (p *GParser) Parse(b []byte) (d []*obj.Document, err error) {
+func (p *GParser) Parse(b []byte) (d []*document.Document, err error) {
 	defer func() {
 		for _, v := range d {
 			fmt.Printf("%+v\n", v)
 		}
 	}()
-	d = make([]*obj.Document, 0, 5)
+	d = make([]*document.Document, 0, 5)
 	z := html.NewTokenizer(bytes.NewReader(b))
 	for {
 		tt := z.Next()
@@ -63,11 +65,11 @@ func (p *GParser) Parse(b []byte) (d []*obj.Document, err error) {
 	}
 }
 
-func (p *GParser) parseSearchResult(t *html.Tokenizer) *obj.Document {
+func (p *GParser) parseSearchResult(t *html.Tokenizer) *document.Document {
 
 	level := 0
-	var doc = new(obj.Document)
-	doc.Item = obj.NewItem(obj.TDocument)
+	var doc = new(document.Document)
+	doc.Item = item.New(types.Document)
 
 	for {
 		tt := t.Next()
@@ -86,7 +88,7 @@ func (p *GParser) parseSearchResult(t *html.Tokenizer) *obj.Document {
 	return doc
 }
 
-func processToken(t *html.Tokenizer, tk html.Token, doc *obj.Document) error {
+func processToken(t *html.Tokenizer, tk html.Token, doc *document.Document) error {
 	d := tk.Data
 	switch d {
 	case "a":
@@ -100,7 +102,7 @@ func processToken(t *html.Tokenizer, tk html.Token, doc *obj.Document) error {
 	return nil
 }
 
-func handleSpan(tk html.Token, t *html.Tokenizer, doc *obj.Document) {
+func handleSpan(tk html.Token, t *html.Tokenizer, doc *document.Document) {
 	// prob a better way to do this
 
 	if len(tk.Attr) == 1 && tk.Attr[0].Val == "MUxGbd wuQ4Ob WZ8Tjf" {
@@ -114,13 +116,13 @@ func handleSpan(tk html.Token, t *html.Tokenizer, doc *obj.Document) {
 	}
 }
 
-func addTitle(t *html.Tokenizer, doc *obj.Document) {
+func addTitle(t *html.Tokenizer, doc *document.Document) {
 	t.Next()
 	data := t.Token().Data
 	doc.Title = data
 }
 
-func addSource(tk html.Token, doc *obj.Document) {
+func addSource(tk html.Token, doc *document.Document) {
 	if href, has := getHref(tk.Attr); has {
 		if v, err := stripQuery(href); err == nil {
 			doc.Source = v

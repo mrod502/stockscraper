@@ -7,7 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/mrod502/stockscraper/api"
-	"github.com/mrod502/stockscraper/obj"
+	"github.com/mrod502/stockscraper/obj/document"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	obj.Setup(cfg.Obj)
+	document.Setup(cfg.Obj)
 	defer r.Close()
 	go func() {
 		err = r.Serve()
