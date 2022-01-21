@@ -7,11 +7,11 @@ require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/mrod502/go-cache v1.1.13
-	github.com/mrod502/logger v1.1.18
+	github.com/mrod502/go-cache v1.1.16
+	github.com/mrod502/logger v1.1.20
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	go.uber.org/atomic v1.9.0
-	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3
+	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d
 )
 
 require (
@@ -27,18 +27,18 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/gigawattio/window v0.0.0-20180317192513-0f5467e35573 // indirect
-	github.com/go-resty/resty/v2 v2.6.0 // indirect
+	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/flatbuffers v2.0.0+incompatible // indirect
+	github.com/google/flatbuffers v2.0.5+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/jaytaylor/html2text v0.0.0-20211013233858-90c08c5027d3 // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/jaytaylor/html2text v0.0.0-20211105163654-bc68cce691ba // indirect
+	github.com/klauspost/compress v1.14.1 // indirect
 	github.com/levigross/exp-html v0.0.0-20120902181939-8df60c69a8f5 // indirect
-	github.com/mattn/go-colorable v0.1.11 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
@@ -46,15 +46,15 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/otiai10/gosseract/v2 v2.3.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/richardlehane/mscfb v1.0.3 // indirect
+	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect
+	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect

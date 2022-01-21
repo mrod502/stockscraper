@@ -59,7 +59,7 @@ type ItemQuery struct {
 	Limit    uint
 }
 
-func (q ItemQuery) GetLimit() uint { return q.Limit | 1 }
+func (q ItemQuery) GetLimit() uint { return 10000 }
 
 func NewItemQuery(c gocache.TimeQuery, cl gocache.StringQuery, d gocache.BoolQuery, l uint) ItemQuery {
 

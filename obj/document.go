@@ -1,10 +1,13 @@
 package obj
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -40,6 +43,10 @@ type Document struct {
 }
 
 func (d *Document) Create() error {
+	d.Id = GetSignature([]byte(d.Source))
+	if fileExists(docMgr.genPath(d)) {
+		return os.ErrExist
+	}
 	docMgr.saveChan <- d
 	return nil
 }
@@ -124,4 +131,18 @@ func generateBrowserRequest(uri string) *http.Request {
 
 func (d Document) isText() bool {
 	return strings.Contains(d.ContentType, "text/")
+}
+
+func GetSignature(b []byte) string {
+	sig := sha256.Sum256(b)
+	return strings.ReplaceAll(strings.ReplaceAll(base64.StdEncoding.EncodeToString(sig[:]), "=", ""), "/", "_")
+}
+
+func fileExists(fileName string) bool {
+	_, err := os.Stat(fileName)
+	if err == nil {
+		return true
+	}
+
+	return err != os.ErrNotExist && !strings.Contains(err.Error(), "no such file")
 }

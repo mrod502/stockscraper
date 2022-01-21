@@ -131,16 +131,25 @@ func (s *Server) Scrape(w http.ResponseWriter, r *http.Request) {
 		s.err(requestSummary(r)...)
 		return
 	}
-	go func() {
-		d, err := s.s.Scrape(symbol, ftype)
-		if err != nil {
-			s.err("scrape", err.Error())
-		}
-		for _, v := range d {
-			s.newDocsChan <- v
-		}
-	}()
-	w.WriteHeader(http.StatusOK)
+
+	d, err := s.s.Scrape(symbol, ftype)
+	if err != nil {
+		s.err("scrape", err.Error())
+	}
+	for _, v := range d {
+		s.newDocsChan <- v
+	}
+	b, err := json.Marshal(d)
+	if err != nil {
+		s.err("marshal", err.Error())
+		return
+	}
+	_, err = w.Write(b)
+	if err != nil {
+		s.err("write", err.Error())
+		return
+	}
+
 }
 
 func (s *Server) crawl(w http.ResponseWriter, r *http.Request) {
