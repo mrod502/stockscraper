@@ -48,7 +48,14 @@ func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
 		crawlReset:  atomic.NewInt64(0),
 	}
 	s.l.SetLogLocally(true)
-	err = s.l.Connect()
+	for i := 0; i < 5; err = s.l.Connect() {
+		if err == nil {
+			break
+		}
+		logger.Error("SCRAPER", "logger", "connect", err.Error(), "retrying...")
+		time.Sleep(2 * time.Second)
+		i++
+	}
 	if err != nil {
 		return nil, err
 	}
