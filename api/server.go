@@ -20,7 +20,7 @@ import (
 type Server struct {
 	router      *mux.Router
 	db          *db.DB
-	v           *gocache.ObjectCache
+	v           *gocache.Cache[interface{}, string]
 	l           logger.Client
 	s           scraper.Client
 	c           Config
@@ -39,7 +39,7 @@ func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
 	}
 	s = &Server{
 		router:      mux.NewRouter(),
-		v:           gocache.NewObjectCache().WithDb(db),
+		v:           gocache.New[interface{}, string](),
 		db:          db,
 		newDocsChan: make(chan *obj.Document, 512),
 		l:           l,
@@ -110,7 +110,7 @@ func (s *Server) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := s.v.Where(q)
+	res, err := s.v.Where(func(i interface{}) bool { return q.Match(i) })
 
 	if err != nil {
 		s.err("query", r.RemoteAddr, r.URL.EscapedPath(), err.Error())

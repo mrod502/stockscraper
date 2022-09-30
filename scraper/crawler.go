@@ -27,8 +27,8 @@ type CrawlerParams struct {
 
 type Crawler struct {
 	l                  logger.Client
-	visited            *gocache.BoolCache
-	seeds              *gocache.BoolCache
+	visited            *gocache.Cache[bool, string]
+	seeds              *gocache.Cache[bool, string]
 	applicationHandler func(*http.Response) error
 	textHandler        func(*http.Response) error
 	requestCount       *atomic.Uint64
@@ -36,7 +36,7 @@ type Crawler struct {
 	wg                 *sync.WaitGroup
 	workers            []chan string
 	currentWorker      *atomic.Uint32
-	ignore             *gocache.BoolCache
+	ignore             *gocache.Cache[bool, string]
 }
 
 func NewCrawler(params CrawlerParams) (c *Crawler, err error) {
@@ -44,13 +44,13 @@ func NewCrawler(params CrawlerParams) (c *Crawler, err error) {
 		return nil, errors.New("cannot initialize with no seeds")
 	}
 	c = &Crawler{
-		visited:       gocache.NewBoolCache(),
-		seeds:         gocache.NewBoolCache(),
+		visited:       gocache.New[bool, string](),
+		seeds:         gocache.New[bool, string](),
 		requestCount:  atomic.NewUint64(0),
 		maxRequests:   params.Limit,
 		wg:            &sync.WaitGroup{},
 		currentWorker: atomic.NewUint32(0),
-		ignore: gocache.NewBoolCache(map[string]bool{
+		ignore: gocache.New(map[string]bool{
 			//set some ignored patterns so we don't get blacklisted :)
 			"googlesyndication": true,
 			"/video":            true,
@@ -122,7 +122,7 @@ func (c *Crawler) buildWorkers(numWorkers uint8) {
 // used within a worker goroutine
 func (c *Crawler) findHrefs(uri string) {
 	c.log(uri)
-	if c.visited.Get(uri) {
+	if v, _ := c.visited.Get(uri); v {
 		return
 	}
 
