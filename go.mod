@@ -10,6 +10,7 @@ require (
 	github.com/mrod502/go-cache v1.2.3
 	github.com/mrod502/logger v1.2.1
 	github.com/vmihailenco/msgpack/v5 v5.3.5
+	go.mongodb.org/mongo-driver v1.10.2
 	go.uber.org/atomic v1.10.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 )

@@ -11,8 +11,13 @@ var (
 	DefaultResultLimit uint = 100
 )
 
-func (d *DB) Where(m gocache.Matcher) ([]gocache.Object, error) {
-	var objects []gocache.Object = make([]gocache.Object, 0)
+type Query[T any] interface {
+	Prefix() string
+	Unmarshal([]byte, func([]byte, interface{}) error) (T, error)
+	Match(T) bool
+}
+
+func (d *DB) Where(m Query[any]) ([]any, error) {
 	var matches uint
 	for _, key := range d.Keys() {
 		err := d.db.View(func(t *badger.Txn) error {
