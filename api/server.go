@@ -21,7 +21,7 @@ type Server struct {
 	router      *mux.Router
 	db          *db.DB
 	v           *gocache.Cache[interface{}, string]
-	l           logger.Client
+	l           *Logger
 	s           scraper.Client
 	c           Config
 	newDocsChan chan *obj.Document
@@ -33,7 +33,7 @@ func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
 	if err != nil {
 		return nil, err
 	}
-	l, err := logger.NewClient(cfg.Logger)
+	l, err := NewLogger(cfg.Logger.RemoteIP)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,10 @@ func NewServer(cfg Config, errHandler func(error)) (s *Server, err error) {
 	s.buildRoutes()
 	return
 }
-func (s *Server) Close() error { return s.db.Close() }
+func (s *Server) Close() error {
+	s.l.Stop()
+	return s.db.Close()
+}
 
 func (s *Server) documentProcessor() {
 	for {

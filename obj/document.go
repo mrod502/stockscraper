@@ -38,9 +38,11 @@ type Document struct {
 	Sectors     []string  `msgpack:"sct,omitempty"` // Sectors of industry / finance this document mentions / relates to
 	Source      string    `msgpack:"src,omitempty"` // The URL of this document
 	ContentType string    `msgpack:"ctt,omitempty"` // the content type (pdf,etc)
-	Type        string    `msgpack:"typ,omitempty"` // Financial statement, analysis, blog post, etc...
-	PostedDate  time.Time `msgpack:"pdate,omitempty"`
+	DocType     string    `msgpack:"dtp,omitempty"` // Financial statement, analysis, blog post, etc...
+	PostedDate  time.Time `msgpack:"pdt,omitempty"`
 }
+
+func (d Document) Type() uint16 { return TypeDocument }
 
 func (d *Document) Create() error {
 	d.Id = GetSignature([]byte(d.Source))

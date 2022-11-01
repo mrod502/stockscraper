@@ -4,6 +4,10 @@
 *.dll
 *.so
 *.dylib
+stockscraper-*
+
+# Config files
+config.json
 
 #
 *.pdf
