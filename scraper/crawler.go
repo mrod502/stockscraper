@@ -27,8 +27,8 @@ type CrawlerParams struct {
 
 type Crawler struct {
 	l                  logger.Client
-	visited            *gocache.Cache[bool, string]
-	seeds              *gocache.Cache[bool, string]
+	visited            *gocache.Cache[string, bool]
+	seeds              *gocache.Cache[string, bool]
 	applicationHandler func(*http.Response) error
 	textHandler        func(*http.Response) error
 	requestCount       *atomic.Uint64
@@ -36,7 +36,7 @@ type Crawler struct {
 	wg                 *sync.WaitGroup
 	workers            []chan string
 	currentWorker      *atomic.Uint32
-	ignore             *gocache.Cache[bool, string]
+	ignore             *gocache.Cache[string, bool]
 }
 
 func NewCrawler(params CrawlerParams) (c *Crawler, err error) {
@@ -44,8 +44,8 @@ func NewCrawler(params CrawlerParams) (c *Crawler, err error) {
 		return nil, errors.New("cannot initialize with no seeds")
 	}
 	c = &Crawler{
-		visited:       gocache.New[bool, string](),
-		seeds:         gocache.New[bool, string](),
+		visited:       gocache.New[string, bool](),
+		seeds:         gocache.New[string, bool](),
 		requestCount:  atomic.NewUint64(0),
 		maxRequests:   params.Limit,
 		wg:            &sync.WaitGroup{},

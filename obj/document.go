@@ -95,7 +95,6 @@ func (d *Document) retrieve() ([]byte, error) {
 		fmt.Println(err.Error())
 		return nil, err
 	}
-	fmt.Println("doc: got - ", res.Request.URL.EscapedPath())
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err

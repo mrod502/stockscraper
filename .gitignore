@@ -9,9 +9,10 @@ stockscraper-*
 # Config files
 config.json
 
-#
+# other stuff
 *.pdf
 *.html
+*.log
 
 # Test binary, built with `go test -c`
 *.test

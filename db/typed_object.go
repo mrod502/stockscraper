@@ -23,8 +23,12 @@ func FromTyped(t Typed, useCompression bool) (TypedObject, error) {
 	}, nil
 }
 
+func TypeToBytes(t uint16) []byte {
+	return []byte{byte(t >> 8), byte(t)}
+}
+
 func (t TypedObject) toBytes() []byte {
-	var typ = []byte{byte(t.Type >> 8), byte(t.Type)}
+	var typ = TypeToBytes(t.Type)
 	return append(typ, t.Data...)
 }
 
